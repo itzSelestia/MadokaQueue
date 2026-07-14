@@ -1,0 +1,13 @@
+name: MadokaQueue
+version: '${version}'
+
+main: dev.yae.madokaQueue.MadokaQueue
+api-version: '1.21.11'
+load: POSTWORLD
+
+authors: [ Selestia ]
+
+commands:
+  duel:
+    description: Debug - start a match against another player
+    usage: /duel <username> [rounds]
