@@ -2,8 +2,7 @@ package dev.yae.madokaQueue.game;
 
 import dev.yae.madokaQueue.MadokaQueue;
 import dev.yae.madokaQueue.util.InvincibleManager;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
+import dev.yae.madokaQueue.util.SpectatorManager;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -19,9 +18,12 @@ public class Match {
     private MatchState matchState = MatchState.WAITNG;
     private UUID winner;
     private boolean settingUpRound = false;
+    private boolean celebrating = false;
     private final int countdown = 5;
+    private final int victoryCountdown = 3;
     private final MadokaQueue instance = MadokaQueue.getInstance();
     private BukkitTask countdownTask;
+    private BukkitTask celebrationTask;
 
     public Match(UUID player1, UUID player2, int rounds) {
         if (rounds < 1 || rounds % 2 == 0) {
@@ -52,8 +54,7 @@ public class Match {
 
 
     public void onPlayerDeath(UUID deadPlayer) {
-        // a death during the countdown is not a lost round, and must not start a second one
-        if (matchState != MatchState.IN_PROGRESS || settingUpRound || !hasPlayer(deadPlayer)) {
+        if (matchState != MatchState.IN_PROGRESS || settingUpRound || celebrating || !hasPlayer(deadPlayer)) {
             return;
         }
 
@@ -65,11 +66,10 @@ public class Match {
 
         currentRound++;
 
-        if (isMatchOver()) {
-            endMatch();
-        } else {
-            startRound();
-        }
+        celebrating = true;
+        setGodMode(true);
+        SpectatorManager.setSpectator(deadPlayer);
+        startCelebration();
     }
 
 
@@ -116,11 +116,49 @@ public class Match {
 
     }
 
-    // a countdown left running after the match ends would flip god mode back on later
+
+    private void startCelebration() {
+        celebrationTask = new BukkitRunnable() {
+            int secondsLeft = victoryCountdown;
+
+            @Override
+            public void run() {
+                if (secondsLeft <= 0) {
+                    cancel();
+                    celebrationTask = null;
+                    endCelebration();
+                    return;
+                }
+
+                System.out.println("VICTORY " + secondsLeft);
+
+                secondsLeft--;
+            }
+        }.runTaskTimer(instance, 0L, 20L);
+    }
+
+    private void endCelebration() {
+        celebrating = false;
+        restoreGameModes();
+
+        if (isMatchOver()) {
+            endMatch();
+        } else {
+            startRound();
+        }
+    }
+
     private void cancelCountDown() {
         if (countdownTask != null) {
             countdownTask.cancel();
             countdownTask = null;
+        }
+    }
+
+    private void cancelCelebration() {
+        if (celebrationTask != null) {
+            celebrationTask.cancel();
+            celebrationTask = null;
         }
     }
 
@@ -129,14 +167,22 @@ public class Match {
         InvincibleManager.setInvincible(player2, invincible);
     }
 
+    private void restoreGameModes() {
+        SpectatorManager.restore(player1);
+        SpectatorManager.restore(player2);
+    }
+
     private void endMatch() {
         if (matchState == MatchState.ENDED) {
             return;
         }
         matchState = MatchState.ENDED;
         cancelCountDown();
+        cancelCelebration();
         setGodMode(false);
+        restoreGameModes();
         settingUpRound = false;
+        celebrating = false;
         if (winner == null) {
             winner = player1score > player2score ? player1 : player2;
         }
@@ -158,9 +204,6 @@ public class Match {
         return null;
     }
 
-
-
-
     public UUID getWinner() {
         return winner;
     }
@@ -168,6 +211,10 @@ public class Match {
 
     public boolean isSettingUpRound() {
         return settingUpRound;
+    }
+
+    public boolean isCelebrating() {
+        return celebrating;
     }
 
     public MatchState getMatchState() {

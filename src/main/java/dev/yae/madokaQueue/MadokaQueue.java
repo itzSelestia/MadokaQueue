@@ -5,6 +5,7 @@ import dev.yae.madokaQueue.game.listeners.DeathListener;
 import dev.yae.madokaQueue.game.listeners.MatchListener;
 import dev.yae.madokaQueue.game.MatchManager;
 import dev.yae.madokaQueue.util.InvincibleManager;
+import dev.yae.madokaQueue.util.SpectatorManager;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,6 +28,7 @@ public final class MadokaQueue extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new DeathListener(matchManager), this);
         getServer().getPluginManager().registerEvents(new MatchListener(matchManager), this);
         getServer().getPluginManager().registerEvents(new InvincibleManager(), this);
+        getServer().getPluginManager().registerEvents(new SpectatorManager(), this);
 
         DuelCommand duelCommand = new DuelCommand(matchManager);
         PluginCommand duel = Objects.requireNonNull(getCommand("duel"), "duel command missing from plugin.yml");
@@ -38,6 +40,7 @@ public final class MadokaQueue extends JavaPlugin {
     public void onDisable() {
         // on /reload the players stay online, and their countdown tasks do not
         InvincibleManager.clearAll();
+        SpectatorManager.restoreAll();
     }
 
     public MatchManager getMatchManager() {

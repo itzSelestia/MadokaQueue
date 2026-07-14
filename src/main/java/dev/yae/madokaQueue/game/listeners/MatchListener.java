@@ -59,7 +59,8 @@ public class MatchListener implements Listener {
             return;
         }
 
-        if (match.isSettingUpRound()) {
+        // the rtp teleport is not running away, and a spectator flying around is not either
+        if (match.isSettingUpRound() || match.isCelebrating()) {
             return;
         }
 
