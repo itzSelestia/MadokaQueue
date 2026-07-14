@@ -9,5 +9,5 @@ authors: [ Selestia ]
 
 commands:
   duel:
-    description: Debug - start a match against another player
-    usage: /duel <username> [rounds]
+    description: Challenge another player to a duel
+    usage: /duel <player> [gamemode] [rounds] | /duel accept <player> | /duel decline <player>

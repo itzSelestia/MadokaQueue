@@ -2,6 +2,10 @@ package dev.yae.madokaQueue.game.listeners;
 
 import dev.yae.madokaQueue.game.Match;
 import dev.yae.madokaQueue.game.MatchManager;
+import dev.yae.madokaQueue.ui.DeathMessages;
+import dev.yae.madokaQueue.ui.Palette;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
@@ -10,6 +14,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.util.UUID;
 
@@ -38,14 +43,27 @@ public class DeathListener implements Listener {
             return;
         }
 
+        // a totem is the player's own answer to a killing blow. cancelling the damage here would
+        // swallow it silently -- vanilla only checks for a totem *after* this event -- so step
+        // aside and let it pop: nobody dies, nobody scores, the round carries on
+        if (holdsTotem(player)) {
+            return;
+        }
+
         event.setCancelled(true);
         player.setFireTicks(0);
 
         AttributeInstance maxHealth = player.getAttribute(Attribute.MAX_HEALTH);
         player.setHealth(maxHealth == null ? 20.0 : maxHealth.getValue());
 
-        match.onPlayerDeath(player.getUniqueId());
+        match.onPlayerDeath(player.getUniqueId(), DeathMessages.of(player, event));
         matchManager.cleanUp(match);
+    }
+
+    private boolean holdsTotem(Player player) {
+        PlayerInventory inventory = player.getInventory();
+        return inventory.getItemInMainHand().getType() == Material.TOTEM_OF_UNDYING
+                || inventory.getItemInOffHand().getType() == Material.TOTEM_OF_UNDYING;
     }
 
     // backstop for anything that skips the damage event, like /kill or setHealth(0)
@@ -57,7 +75,11 @@ public class DeathListener implements Listener {
             return;
         }
 
-        match.onPlayerDeath(dead);
+        Component message = event.deathMessage() == null
+                ? Palette.info(event.getEntity().getName() + " died")
+                : Palette.prefix().append(event.deathMessage());
+
+        match.onPlayerDeath(dead, message);
         matchManager.cleanUp(match);
     }
 }

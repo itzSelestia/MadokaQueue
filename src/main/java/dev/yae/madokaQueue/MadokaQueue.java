@@ -4,8 +4,11 @@ import dev.yae.madokaQueue.commands.DuelCommand;
 import dev.yae.madokaQueue.game.listeners.DeathListener;
 import dev.yae.madokaQueue.game.listeners.MatchListener;
 import dev.yae.madokaQueue.game.MatchManager;
+import com.github.retrooper.packetevents.PacketEvents;
+import dev.yae.madokaQueue.util.CorpseManager;
 import dev.yae.madokaQueue.util.InvincibleManager;
 import dev.yae.madokaQueue.util.SpectatorManager;
+import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -22,8 +25,17 @@ public final class MadokaQueue extends JavaPlugin {
     private static MadokaQueue instance;
 
     @Override
+    public void onLoad() {
+        // packetevents has to be built and loaded before any plugin is enabled
+        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
+        PacketEvents.getAPI().load();
+    }
+
+    @Override
     public void onEnable() {
         instance = this;
+
+        PacketEvents.getAPI().init();
 
         getServer().getPluginManager().registerEvents(new DeathListener(matchManager), this);
         getServer().getPluginManager().registerEvents(new MatchListener(matchManager), this);
@@ -41,6 +53,9 @@ public final class MadokaQueue extends JavaPlugin {
         // on /reload the players stay online, and their countdown tasks do not
         InvincibleManager.clearAll();
         SpectatorManager.restoreAll();
+        CorpseManager.removeAll();
+
+        PacketEvents.getAPI().terminate();
     }
 
     public MatchManager getMatchManager() {

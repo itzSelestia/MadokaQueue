@@ -7,10 +7,13 @@ plugins {
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://repo.codemc.io/repository/maven-releases/")
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    // shaded into our jar, so the server does not need it installed as a plugin
+    implementation("com.github.retrooper:packetevents-spigot:2.13.0")
 }
 
 java {
@@ -20,6 +23,13 @@ java {
 tasks {
     build {
         dependsOn(shadowJar)
+    }
+
+    shadowJar {
+        // packetevents requires relocation when shaded, otherwise it clashes with any other
+        // plugin that bundles its own copy
+        relocate("com.github.retrooper.packetevents", "dev.yae.madokaQueue.shaded.packetevents.api")
+        relocate("io.github.retrooper.packetevents", "dev.yae.madokaQueue.shaded.packetevents.impl")
     }
 
     runServer {
