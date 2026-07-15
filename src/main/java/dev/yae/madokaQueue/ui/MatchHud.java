@@ -27,6 +27,11 @@ public class MatchHud {
 
     private final UUID player1;
     private final UUID player2;
+
+    public Component getGamemode() {
+        return gamemode;
+    }
+
     private final Component gamemode;
 
     public MatchHud(UUID player1, UUID player2, Component gamemode) {

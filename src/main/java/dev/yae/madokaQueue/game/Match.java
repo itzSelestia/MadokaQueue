@@ -357,4 +357,8 @@ public class Match {
     public UUID getPlayer2() {
         return player2;
     }
+
+    public Gamemode getGamemode() {
+        return gamemode;
+    }
 }

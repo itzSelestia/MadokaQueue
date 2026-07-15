@@ -3,6 +3,7 @@ package dev.yae.madokaQueue.game.listeners;
 import dev.yae.madokaQueue.game.Match;
 import dev.yae.madokaQueue.game.MatchManager;
 import dev.yae.madokaQueue.game.MatchState;
+import dev.yae.madokaQueue.game.gamemode.VanillaGamemode;
 import dev.yae.madokaQueue.ui.Palette;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -53,7 +54,10 @@ public class MatchListener implements Listener {
         if (matchManager.getMatch(player.getUniqueId()) == null) {
             return;
         }
-        player.sendMessage(Palette.info(Component.text("Do not use commands while fighting", Palette.BLOSSOM)));
+        if (matchManager.getMatch(player.getUniqueId()).getGamemode() instanceof VanillaGamemode) {
+            return;
+        }
+        player.sendMessage(Palette.info(Component.text("Do not use commands while fighting in non vanilla gamemode", Palette.BLOSSOM)));
         event.setCancelled(true);
     }
 
