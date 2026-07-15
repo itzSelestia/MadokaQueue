@@ -12,6 +12,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -33,6 +35,12 @@ public class RtpqCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(Palette.info(Component.text("/rtpq <gamemode>", Palette.SOFT)));
             player.sendMessage(Palette.info(Component.text(
                     "modes: " + String.join(", ", Gamemodes.names()), Palette.SOFT)));
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("leave")) {
+            queueManager.removeFromQueue(player.getUniqueId());
+            player.sendMessage(Palette.info(Component.text("You have left the queue", Palette.SOFT)));
             return true;
         }
 
@@ -58,9 +66,12 @@ public class RtpqCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 1) {
             String prefix = args[0].toLowerCase(Locale.ROOT);
-            return Gamemodes.names().stream()
+            List<String> list = Gamemodes.names().stream()
                     .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
                     .toList();
+            List<String> result = new ArrayList<>(list);
+            result.add("leave");
+            return result;
         }
         return List.of();
     }
