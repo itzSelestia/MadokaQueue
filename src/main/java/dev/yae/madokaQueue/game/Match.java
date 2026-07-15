@@ -7,11 +7,18 @@ import dev.yae.madokaQueue.ui.MatchHud;
 import dev.yae.madokaQueue.util.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.EnumSet;
+import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 public class Match {
@@ -30,6 +37,19 @@ public class Match {
     private final int firstRoundCountdown = 10;
     private final int victoryCountdown = 3;
     private final int corpseLifetime = 3;
+    private static final int RTP_RANGE = 5000;
+    private static final int RTP_MIN_Y = 60;
+    private static final int RTP_MAX_Y = 250;
+    private static final int RTP_ATTEMPTS = 60;
+    private static final Set<Material> RTP_UNSAFE = EnumSet.of(
+            Material.LAVA,
+            Material.MAGMA_BLOCK,
+            Material.FIRE,
+            Material.SOUL_FIRE,
+            Material.CAMPFIRE,
+            Material.SOUL_CAMPFIRE,
+            Material.CACTUS);
+    private static final Random RTP_RANDOM = new Random();
     private final MadokaQueue instance = MadokaQueue.getInstance();
     private final MatchHud hud;
     private BukkitTask countdownTask;
@@ -142,7 +162,53 @@ public class Match {
     }
 
     private void rtp() {
-        System.out.println("RTP");
+        World world = instance.getRtpWorld();
+        if (world == null) {
+            return;
+        }
+
+        Location location = findSafeLocation(world);
+        if (location == null) {
+            location = world.getSpawnLocation();
+        }
+
+        teleport(player1, location);
+        teleport(player2, location);
+    }
+
+    private void teleport(UUID uuid, Location location) {
+        Player player = Bukkit.getPlayer(uuid);
+        if (player != null) {
+            player.teleport(location);
+        }
+    }
+
+    private Location findSafeLocation(World world) {
+        for (int attempt = 0; attempt < RTP_ATTEMPTS; attempt++) {
+            int x = RTP_RANDOM.nextInt(RTP_RANGE * 2 + 1) - RTP_RANGE;
+            int z = RTP_RANDOM.nextInt(RTP_RANGE * 2 + 1) - RTP_RANGE;
+            int y = findSafeY(world, x, z);
+            if (y != -1) {
+                return new Location(world, x + 0.5, y + 1, z + 0.5);
+            }
+        }
+        return null;
+    }
+
+    private int findSafeY(World world, int x, int z) {
+        int startY = Math.min(RTP_MAX_Y, world.getHighestBlockYAt(x, z));
+        for (int y = startY; y >= RTP_MIN_Y; y--) {
+            Block ground = world.getBlockAt(x, y, z);
+            Block feet = world.getBlockAt(x, y + 1, z);
+            Block head = world.getBlockAt(x, y + 2, z);
+            if (ground.getType().isSolid()
+                    && feet.getType().isAir()
+                    && head.getType().isAir()
+                    && !RTP_UNSAFE.contains(ground.getType())) {
+                return y;
+            }
+        }
+        return -1;
     }
 
     private void startCountDown() {

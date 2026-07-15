@@ -5,6 +5,9 @@ import dev.yae.madokaQueue.game.gamemode.Gamemodes;
 import dev.yae.madokaQueue.ui.Palette;
 import dev.yae.madokaQueue.util.QueueManager;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -51,11 +54,19 @@ public class RtpqCommand implements CommandExecutor, TabCompleter {
         }
 
         if (queueManager.addToQueue(gamemode, player.getUniqueId())) {
-            player.sendMessage(Palette.info(Component.text()
-                    .append(Component.text("Queued for ", Palette.SNOW))
+            Component join = Component.text("[Join]", Palette.PETAL, TextDecoration.BOLD)
+                    .clickEvent(ClickEvent.runCommand("/rtpq " + gamemode.getName()))
+                    .hoverEvent(HoverEvent.showText(Component.text()
+                            .append(Component.text("Queue for ", Palette.SNOW))
+                            .append(gamemode.displayName())
+                            .build()));
+
+            Bukkit.broadcast(Palette.prefix()
+                    .append(Component.text(player.getName(), Palette.BLOSSOM, TextDecoration.BOLD))
+                    .append(Component.text(" is queueing for ", Palette.SNOW))
                     .append(gamemode.displayName())
-                    .append(Component.text(". Waiting for an opponent...", Palette.SNOW))
-                    .build()));
+                    .append(Component.text("  ", Palette.SNOW))
+                    .append(join));
         } else {
             player.sendMessage(Palette.warn("You are already queued or in a duel."));
         }

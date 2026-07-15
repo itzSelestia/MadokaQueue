@@ -11,6 +11,7 @@ import dev.yae.madokaQueue.util.InvincibleManager;
 import dev.yae.madokaQueue.util.QueueManager;
 import dev.yae.madokaQueue.util.SpectatorManager;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
+import org.bukkit.World;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -37,6 +38,8 @@ public final class MadokaQueue extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+
+        saveDefaultConfig();
 
         PacketEvents.getAPI().init();
 
@@ -70,5 +73,11 @@ public final class MadokaQueue extends JavaPlugin {
 
     public MatchManager getMatchManager() {
         return matchManager;
+    }
+
+    public World getRtpWorld() {
+        String name = getConfig().getString("rtp-world", "world");
+        World world = getServer().getWorld(name);
+        return world != null ? world : getServer().getWorlds().get(0);
     }
 }
