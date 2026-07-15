@@ -47,7 +47,6 @@ public class MatchListener implements Listener {
         checkDistance(event.getPlayer(), to);
     }
 
-
     @EventHandler
     public void onTeleport(PlayerTeleportEvent event) {
         checkDistance(event.getPlayer(), event.getTo());
@@ -59,7 +58,6 @@ public class MatchListener implements Listener {
             return;
         }
 
-        // the rtp teleport is not running away, and a spectator flying around is not either
         if (match.isSettingUpRound() || match.isCelebrating()) {
             return;
         }

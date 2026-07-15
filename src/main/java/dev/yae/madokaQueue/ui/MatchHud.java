@@ -12,7 +12,6 @@ import org.bukkit.entity.Player;
 import java.time.Duration;
 import java.util.UUID;
 
-// everything the two duellists see and hear. kept out of Match so the game logic stays readable
 public class MatchHud {
     private static final TextColor PETAL = Palette.PETAL;
     private static final TextColor BLOSSOM = Palette.BLOSSOM;
@@ -60,7 +59,6 @@ public class MatchHud {
                 QUICK)));
     }
 
-    // the pitch climbs as the count falls, so the last tick is the tensest
     public void countdown(int secondsLeft) {
         Component bar = Component.text()
                 .append(Component.text(FLOWER + "  ", PETAL))
@@ -86,12 +84,10 @@ public class MatchHud {
         });
     }
 
-    // vanilla never gets to print one, because the killing blow is cancelled
     public void deathMessage(Component message) {
         both(player -> player.sendMessage(message));
     }
 
-    // eliminated is whoever just died, so the other one took the round
     public void roundOver(UUID eliminated, int player1score, int player2score) {
         UUID roundWinner = eliminated.equals(player1) ? player2 : player1;
 
@@ -146,7 +142,6 @@ public class MatchHud {
         });
     }
 
-    // the whole server hears about a finished duel, not just the two who fought
     private void broadcastResult(UUID winner, int player1score, int player2score) {
         UUID loser = winner.equals(player1) ? player2 : player1;
         int winnerScore = Math.max(player1score, player2score);
@@ -167,7 +162,6 @@ public class MatchHud {
                 petals(Component.text(nameOf(offender) + " left the duel", SOFT))));
     }
 
-    // always from the reader's own point of view: your score first
     private Component score(UUID viewer, int player1score, int player2score) {
         int mine = viewer.equals(player1) ? player1score : player2score;
         int theirs = viewer.equals(player1) ? player2score : player1score;

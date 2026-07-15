@@ -8,7 +8,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.projectiles.ProjectileSource;
 
-// the killing blow is cancelled, so vanilla never writes a death message. we write our own
 public final class DeathMessages {
     private DeathMessages() {
     }
@@ -60,7 +59,6 @@ public final class DeathMessages {
             return player;
         }
 
-        // an arrow's killer is whoever fired it, not the arrow
         if (byEntity.getDamager() instanceof Projectile projectile) {
             ProjectileSource shooter = projectile.getShooter();
             if (shooter instanceof Player player) {

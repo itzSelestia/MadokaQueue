@@ -35,19 +35,10 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
-// a corpse is a fake player entity wearing the dead player's skin, spawned with packets and
-// never registered with the world, so it stands frozen where they were killed
 public class CorpseManager {
-    // real entity ids count up from 0, so counting down from the top avoids colliding with them
     private static final AtomicInteger entityIds = new AtomicInteger(Integer.MAX_VALUE - 10_000);
     private static final Map<UUID, Corpse> corpses = new HashMap<>();
 
-    // "displayed skin parts" byte, 0x7f turns every layer on. without it the corpse renders
-    // with no cape, jacket, sleeves or hat.
-    // this index is version specific and a wrong one hard disconnects every client with
-    // "Invalid entity data item type". the modern layout inserts an Avatar class between
-    // LivingEntity and Player, which owns main hand (15) and skin parts (16); Player itself
-    // starts at additional hearts (17)
     private static final int SKIN_LAYERS_INDEX = 16;
     private static final byte ALL_SKIN_LAYERS = 0x7F;
 
@@ -63,15 +54,12 @@ public class CorpseManager {
         remove(uuid);
 
         int entityId = entityIds.decrementAndGet();
-        // a fresh uuid and name: reusing the real player's would collide with them on the client,
-        // and would drag the real player into the nametag-hiding team below
         UUID profileId = UUID.randomUUID();
         String name = profileId.toString().substring(0, 16);
 
         List<TextureProperty> skin = skinOf(player);
         org.bukkit.Location at = player.getLocation();
 
-        // the team has to exist before the entity spawns, or the nametag flashes for a frame
         broadcast(() -> hideNameTag(name));
         broadcast(() -> addToTab(new UserProfile(profileId, name, skin)));
         broadcast(() -> spawnCorpse(entityId, profileId, at));
@@ -91,7 +79,6 @@ public class CorpseManager {
             return;
         }
 
-        // without this a stale expiry could fire later and delete a *newer* corpse for this player
         corpse.expiry().cancel();
         despawn(corpse);
     }
@@ -114,8 +101,6 @@ public class CorpseManager {
                 (WrapperPlayServerTeams.ScoreBoardTeamInfo) null));
     }
 
-    // a fake player renders its profile name above its head, and there is no metadata flag to
-    // turn that off. a scoreboard team whose nametag visibility is never is the only way
     private static WrapperPlayServerTeams hideNameTag(String name) {
         WrapperPlayServerTeams.ScoreBoardTeamInfo info = new WrapperPlayServerTeams.ScoreBoardTeamInfo(
                 Component.empty(),
@@ -134,8 +119,6 @@ public class CorpseManager {
                 new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(profile);
         info.setGameMode(GameMode.SURVIVAL);
         info.setLatency(0);
-        // listed = false: clients learn the skin from the profile but never show it in the tab
-        // list, so there is no ghost name to clean up afterwards
         info.setListed(false);
 
         return new WrapperPlayServerPlayerInfoUpdate(
@@ -188,8 +171,6 @@ public class CorpseManager {
         return textures;
     }
 
-    // a PacketWrapper carries a netty buffer and is consumed when sent, so each recipient needs
-    // its own instance -- reusing one across sends puts corrupt bytes on the wire
     private static void broadcast(Supplier<PacketWrapper<?>> packet) {
         for (Player online : Bukkit.getOnlinePlayers()) {
             PacketEvents.getAPI().getPlayerManager().sendPacket(online, packet.get());

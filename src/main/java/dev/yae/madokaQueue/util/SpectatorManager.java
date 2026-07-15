@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.UUID;
 
 public class SpectatorManager implements Listener {
-    // a player is in here only while we owe them a gamemode back
     private static final Map<UUID, GameMode> previousModes = new HashMap<>();
 
     public static void setSpectator(UUID uuid) {
@@ -32,7 +31,6 @@ public class SpectatorManager implements Listener {
         }
 
         Player player = Bukkit.getPlayer(uuid);
-        // offline: keep the debt on the books, onJoin pays it
         if (player == null) {
             return;
         }
@@ -52,7 +50,6 @@ public class SpectatorManager implements Listener {
         previousModes.clear();
     }
 
-    // gamemode is saved in playerdata, so someone who quit as a spectator comes back as one
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();

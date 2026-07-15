@@ -62,7 +62,6 @@ public class DuelCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // two identical uuids would collide in the match registry
         if (target.equals(player)) {
             player.sendMessage(Palette.warn("You cannot duel yourself."));
             return true;
@@ -78,7 +77,6 @@ public class DuelCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // extra args come in either order: a number is the round count, a word is the gamemode
         int rounds = DEFAULT_ROUNDS;
         Gamemode gamemode = Gamemodes.getDefault();
         for (int i = 1; i < args.length; i++) {
@@ -100,7 +98,6 @@ public class DuelCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        // if they already invited us, accepting is what they almost certainly mean
         if (inviteManager.get(player.getUniqueId(), target.getUniqueId()) != null) {
             return respond(player, new String[]{"accept", target.getName()}, true);
         }
@@ -192,20 +189,17 @@ public class DuelCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // the world moved on while the invite sat in chat: either of them may have started a duel
         if (matchManager.getMatch(player.getUniqueId()) != null
                 || matchManager.getMatch(sender.getUniqueId()) != null) {
             player.sendMessage(Palette.warn("One of you is already in a duel."));
             return true;
         }
 
-        // whoever is now duelling cannot still be holding invites
         inviteManager.clear(player.getUniqueId());
         inviteManager.clear(sender.getUniqueId());
 
         Match match = new Match(sender.getUniqueId(), player.getUniqueId(), invite.rounds(), invite.gamemode());
         matchManager.register(match);
-        // MatchHud announces the duel to both players, so nothing to send here
         match.startMatch();
         return true;
     }
@@ -283,7 +277,6 @@ public class DuelCommand implements CommandExecutor, TabCompleter {
         boolean responding = sub.equals("accept") || sub.equals("decline");
 
         if (args.length == 2 && responding) {
-            // only offer people who actually have an invite pending with you
             List<String> inviters = new ArrayList<>();
             for (UUID senderId : inviteManager.invitesFor(player.getUniqueId()).keySet()) {
                 Player inviter = Bukkit.getPlayer(senderId);
@@ -294,7 +287,6 @@ public class DuelCommand implements CommandExecutor, TabCompleter {
             return matching(inviters, args[1]);
         }
 
-        // inviting: args 2 and 3 are gamemode and rounds, in either order
         if ((args.length == 2 || args.length == 3) && !responding) {
             List<String> options = new ArrayList<>(Gamemodes.names());
             options.addAll(List.of("1", "3", "5"));

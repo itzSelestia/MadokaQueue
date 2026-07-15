@@ -6,11 +6,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-// prot 4 diamond armour, a diamond sword and a backup wooden sword
 public class SwordGamemode extends Gamemode {
     @Override
     public String getName() {
-        return "Swords";
+        return "Sword";
     }
 
     @Override
@@ -29,8 +28,12 @@ public class SwordGamemode extends Gamemode {
 
     private ItemStack protected_(Material material) {
         ItemStack item = new ItemStack(material);
-        // 4 is protection's vanilla cap, so addEnchantment accepts it without the unsafe call
-        item.addEnchantment(Enchantment.PROTECTION, 4);
+        item.addEnchantment(Enchantment.PROTECTION, 3);
         return item;
+    }
+
+    @Override
+    public void prepareGamemode() {
+        super.prepareGamemode();
     }
 }

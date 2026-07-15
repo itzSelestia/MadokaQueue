@@ -1,12 +1,14 @@
 package dev.yae.madokaQueue;
 
 import dev.yae.madokaQueue.commands.DuelCommand;
+import dev.yae.madokaQueue.commands.RtpqCommand;
 import dev.yae.madokaQueue.game.listeners.DeathListener;
 import dev.yae.madokaQueue.game.listeners.MatchListener;
 import dev.yae.madokaQueue.game.MatchManager;
 import com.github.retrooper.packetevents.PacketEvents;
 import dev.yae.madokaQueue.util.CorpseManager;
 import dev.yae.madokaQueue.util.InvincibleManager;
+import dev.yae.madokaQueue.util.QueueManager;
 import dev.yae.madokaQueue.util.SpectatorManager;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import org.bukkit.command.PluginCommand;
@@ -24,9 +26,10 @@ public final class MadokaQueue extends JavaPlugin {
 
     private static MadokaQueue instance;
 
+    private QueueManager queueManager = new QueueManager(matchManager);
+
     @Override
     public void onLoad() {
-        // packetevents has to be built and loaded before any plugin is enabled
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
         PacketEvents.getAPI().load();
     }
@@ -41,19 +44,26 @@ public final class MadokaQueue extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MatchListener(matchManager), this);
         getServer().getPluginManager().registerEvents(new InvincibleManager(), this);
         getServer().getPluginManager().registerEvents(new SpectatorManager(), this);
+        getServer().getPluginManager().registerEvents(queueManager, this);
+        queueManager.start();
 
         DuelCommand duelCommand = new DuelCommand(matchManager);
         PluginCommand duel = Objects.requireNonNull(getCommand("duel"), "duel command missing from plugin.yml");
         duel.setExecutor(duelCommand);
         duel.setTabCompleter(duelCommand);
+
+        RtpqCommand rtpqCommand = new RtpqCommand(queueManager);
+        PluginCommand rtpq = Objects.requireNonNull(getCommand("rtpq"), "rtpq command missing from plugin.yml");
+        rtpq.setExecutor(rtpqCommand);
+        rtpq.setTabCompleter(rtpqCommand);
     }
 
     @Override
     public void onDisable() {
-        // on /reload the players stay online, and their countdown tasks do not
         InvincibleManager.clearAll();
         SpectatorManager.restoreAll();
         CorpseManager.removeAll();
+        queueManager.stop();
 
         PacketEvents.getAPI().terminate();
     }

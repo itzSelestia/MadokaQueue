@@ -13,7 +13,6 @@ import java.util.UUID;
 public class InvincibleManager implements Listener {
     private static final Set<UUID> immortalPlayers = new HashSet<>();
 
-    // takes a uuid, not a Player, so it still works when the player is offline
     public static void setInvincible(UUID player, boolean invincible) {
         if (invincible) {
             immortalPlayers.add(player);

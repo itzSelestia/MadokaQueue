@@ -11,3 +11,6 @@ commands:
   duel:
     description: Challenge another player to a duel
     usage: /duel <player> [gamemode] [rounds] | /duel accept <player> | /duel decline <player>
+  rtpq:
+    description: Join the random-teleport queue for a gamemode
+    usage: /rtpq <gamemode>

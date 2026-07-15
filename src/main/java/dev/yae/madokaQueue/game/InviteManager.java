@@ -7,8 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-// pending duel invites, keyed by who they were sent to. a player can hold invites from several
-// people at once, which is why accept/decline always name the sender
 public class InviteManager {
     public record Invite(UUID sender, UUID target, int rounds, Gamemode gamemode, BukkitTask expiry) {
     }
@@ -34,7 +32,6 @@ public class InviteManager {
 
         Invite invite = invites.remove(sender);
         if (invite != null) {
-            // a fired expiry cannot cancel itself, but cancelling an already-run task is a no-op
             invite.expiry().cancel();
         }
 
@@ -49,7 +46,6 @@ public class InviteManager {
         return byTarget.getOrDefault(target, Map.of());
     }
 
-    // once a player is duelling, every invite they are part of is dead
     public void clear(UUID player) {
         Map<UUID, Invite> received = byTarget.remove(player);
         if (received != null) {

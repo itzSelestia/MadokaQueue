@@ -25,9 +25,6 @@ public class DeathListener implements Listener {
         this.matchManager = matchManager;
     }
 
-    // players in a match never really die: the killing blow is cancelled and they go to spectator,
-    // so there is no death screen, no respawn, no dropped items
-    // HIGH + ignoreCancelled so the god mode check during the countdown gets to cancel first
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onFatalDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player player)) {
@@ -43,9 +40,6 @@ public class DeathListener implements Listener {
             return;
         }
 
-        // a totem is the player's own answer to a killing blow. cancelling the damage here would
-        // swallow it silently -- vanilla only checks for a totem *after* this event -- so step
-        // aside and let it pop: nobody dies, nobody scores, the round carries on
         if (holdsTotem(player)) {
             return;
         }
@@ -66,7 +60,6 @@ public class DeathListener implements Listener {
                 || inventory.getItemInOffHand().getType() == Material.TOTEM_OF_UNDYING;
     }
 
-    // backstop for anything that skips the damage event, like /kill or setHealth(0)
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         UUID dead = event.getEntity().getUniqueId();

@@ -2,14 +2,13 @@ package dev.yae.madokaQueue.game;
 
 import dev.yae.madokaQueue.MadokaQueue;
 import dev.yae.madokaQueue.game.gamemode.Gamemode;
+import dev.yae.madokaQueue.game.gamemode.VanillaGamemode;
 import dev.yae.madokaQueue.ui.MatchHud;
-import dev.yae.madokaQueue.util.CorpseManager;
-import dev.yae.madokaQueue.util.HealManager;
-import dev.yae.madokaQueue.util.InvincibleManager;
-import dev.yae.madokaQueue.util.SpectatorManager;
+import dev.yae.madokaQueue.util.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -28,16 +27,15 @@ public class Match {
     private boolean settingUpRound = false;
     private boolean celebrating = false;
     private final int countdown = 5;
-    // the first round gives players longer to get ready
     private final int firstRoundCountdown = 10;
     private final int victoryCountdown = 3;
-    // seconds the body stays up after a kill. independent of victoryCountdown, so it can outlive
-    // the celebration and linger into the next round if you want it to
     private final int corpseLifetime = 3;
     private final MadokaQueue instance = MadokaQueue.getInstance();
     private final MatchHud hud;
     private BukkitTask countdownTask;
     private BukkitTask celebrationTask;
+    private ItemStack[] player1Layout = null;
+    private ItemStack[] player2Layout = null;
 
     public Match(UUID player1, UUID player2, int rounds, Gamemode gamemode) {
         if (rounds < 1 || rounds % 2 == 0) {
@@ -74,11 +72,35 @@ public class Match {
 
     private void equipKit(UUID uuid) {
         Player player = Bukkit.getPlayer(uuid);
+        if (gamemode instanceof VanillaGamemode) {
+            return;
+        }
+
+        if (uuid.equals(player1) && player1Layout != null) {
+            assert player != null;
+            player.getInventory().setContents(deepClone(player1Layout));
+            player.updateInventory();
+            return;
+        }
+        else if (uuid.equals(player2) && player2Layout != null) {
+            assert player != null;
+            player.getInventory().setContents(deepClone(player2Layout));
+            player.updateInventory();
+            return;
+        }
+
         if (player != null) {
             gamemode.equipKit(player);
         }
     }
 
+    private ItemStack[] deepClone(ItemStack[] source) {
+        ItemStack[] copy = new ItemStack[source.length];
+        for (int i = 0; i < source.length; i++) {
+            copy[i] = source[i] == null ? null : source[i].clone();
+        }
+        return copy;
+    }
 
     public void onPlayerDeath(UUID deadPlayer, Component deathMessage) {
         if (matchState != MatchState.IN_PROGRESS || settingUpRound || celebrating || !hasPlayer(deadPlayer)) {
@@ -102,7 +124,6 @@ public class Match {
         startCelebration();
     }
 
-
     public void forfeit(UUID offender) {
         if (matchState == MatchState.ENDED || !hasPlayer(offender)) {
             return;
@@ -121,7 +142,6 @@ public class Match {
     }
 
     private void rtp() {
-        // rtp logic here
         System.out.println("RTP");
     }
 
@@ -133,6 +153,10 @@ public class Match {
             @Override
             public void run() {
                 if (secondsLeft <= 0) {
+                    if (currentRound == 1) {
+                        player1Layout = getPlayerLayout(player1);
+                        player2Layout = getPlayerLayout(player2);
+                    }
                     cancel();
                     countdownTask = null;
                     setGodMode(false);
@@ -149,6 +173,13 @@ public class Match {
 
     }
 
+    private ItemStack[] getPlayerLayout(UUID player) {
+        Player player1 = Bukkit.getPlayer(player);
+        if (player1 == null) {
+            return null;
+        }
+        return deepClone(player1.getInventory().getContents());
+    }
 
     private void startCelebration() {
         celebrationTask = new BukkitRunnable() {
@@ -220,10 +251,7 @@ public class Match {
             winner = player1score > player2score ? player1 : player2;
         }
         hud.matchOver(winner, player1score, player2score);
-        // a match that ends inside the celebration timer is not on any listener's code path,
-        // so it has to drop itself from the registry or both players stay "already in a match"
         instance.getMatchManager().unregister(this);
-        // end match logic
     }
 
     public boolean hasPlayer(UUID uuid) {
@@ -243,7 +271,6 @@ public class Match {
     public UUID getWinner() {
         return winner;
     }
-
 
     public boolean isSettingUpRound() {
         return settingUpRound;

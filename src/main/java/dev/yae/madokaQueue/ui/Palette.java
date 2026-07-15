@@ -4,7 +4,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 
-// sakura: soft pink petals on white. the one place to restyle the whole plugin
 public final class Palette {
     public static final TextColor PETAL = TextColor.fromHexString("#FFB7C5");
     public static final TextColor BLOSSOM = TextColor.fromHexString("#FF8FAB");
@@ -24,7 +23,6 @@ public final class Palette {
                 .build();
     }
 
-    // every chat line the plugin sends starts with this, so players can tell it apart
     public static Component prefix() {
         return Component.text()
                 .append(Component.text(FLOWER + " ", PETAL))
