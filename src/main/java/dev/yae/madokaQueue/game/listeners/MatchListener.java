@@ -3,15 +3,15 @@ package dev.yae.madokaQueue.game.listeners;
 import dev.yae.madokaQueue.game.Match;
 import dev.yae.madokaQueue.game.MatchManager;
 import dev.yae.madokaQueue.game.MatchState;
+import dev.yae.madokaQueue.ui.Palette;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.*;
+import org.w3c.dom.Text;
 
 import java.util.UUID;
 
@@ -45,6 +45,16 @@ public class MatchListener implements Listener {
             return;
         }
         checkDistance(event.getPlayer(), to);
+    }
+
+    @EventHandler
+    public void onCommandExecute(PlayerCommandPreprocessEvent event) {
+        Player player = event.getPlayer();
+        if (matchManager.getMatch(player.getUniqueId()) == null) {
+            return;
+        }
+        player.sendMessage(Palette.info(Component.text("Do not use commands while fighting", Palette.BLOSSOM)));
+        event.setCancelled(true);
     }
 
     @EventHandler

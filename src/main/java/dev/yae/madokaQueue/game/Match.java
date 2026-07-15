@@ -36,7 +36,7 @@ public class Match {
     private final int countdown = 5;
     private final int firstRoundCountdown = 10;
     private final int victoryCountdown = 3;
-    private final int corpseLifetime = 3;
+    private final int corpseLifetime = 2;
     private static final int RTP_RANGE = 5000;
     private static final int RTP_MIN_Y = 60;
     private static final int RTP_MAX_Y = 250;

@@ -20,6 +20,8 @@ public class HealManager {
         player.setFoodLevel(20);
         player.setExhaustion(0f);
 
+        player.clearActivePotionEffects();
+
         player.setFireTicks(0);
     }
 }
